@@ -119,9 +119,14 @@ export type Email = {
 // ── Category detection ────────────────────────────────────────────────────────
 
 export function detectCategory(subject: string, body: string): EmailCategory {
-  const text = `${subject} ${body}`.toLowerCase();
-  if (/\bcancel(led|lation)?\b/.test(text)) return "Cancellation";
-  if (/\bamend(ment|ed)?\b|\brevis(ed|ion)\b|\bupdat(ed|e)\b|\bchange\b/.test(text)) return "Amendment";
+  const subj = subject.toLowerCase();
+  const bodyLower = body.toLowerCase();
+  // Cancellation — check subject first, then body
+  if (/\bcancel(led|lation)?\b/.test(subj)) return "Cancellation";
+  if (/\bcancel(led|lation)?\b/.test(bodyLower)) return "Cancellation";
+  // Amendment — subject only (body often contains "update" / "change" in boilerplate)
+  // Require explicit amendment/revision words, not generic "update" or "change"
+  if (/\bamend(ment|ed|ing)?\b|\brevised?\b|\brevision\b|\bcorrect(ed|ion)?\b|\bmodif(ied|ication)\b/.test(subj)) return "Amendment";
   return "New Order";
 }
 
