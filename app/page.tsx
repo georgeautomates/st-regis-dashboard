@@ -57,9 +57,9 @@ export default function HomePage() {
 
   const stats = useMemo(() => ({
     total: emails.length,
-    newOrders: emails.filter(e => e.category === "New Order").length,
-    amendments: emails.filter(e => e.category === "Amendment").length,
-    cancellations: emails.filter(e => e.category === "Cancellation").length,
+    newOrders: emails.filter(e => e.category === "New Order").reduce((s, e) => s + e.job_count, 0),
+    amendments: emails.filter(e => e.category === "Amendment").reduce((s, e) => s + e.job_count, 0),
+    cancellations: emails.filter(e => e.category === "Cancellation").reduce((s, e) => s + e.job_count, 0),
     fullMatch: emails.filter(e => e.worst_status === "MATCH").length,
     partial: emails.filter(e => e.worst_status === "PARTIAL").length,
     mismatch: emails.filter(e => e.worst_status === "MISMATCH").length,
@@ -80,8 +80,8 @@ export default function HomePage() {
       <div className="px-6 py-4 border-b border-slate-800 grid grid-cols-7 gap-3 shrink-0">
         <StatBox label="Emails" value={stats.total} />
         <StatBox label="Total Jobs" value={stats.totalJobs} />
-        <StatBox label="New Orders" value={stats.newOrders} colour="text-sky-400" />
-        <StatBox label="Amendments" value={stats.amendments} colour="text-amber-400" />
+        <StatBox label="New Order Jobs" value={stats.newOrders} colour="text-sky-400" />
+        <StatBox label="Amendment Jobs" value={stats.amendments} colour="text-amber-400" />
         <StatBox label="Full Match" value={stats.fullMatch} colour="text-emerald-400" />
         <StatBox label="Partial" value={stats.partial} colour="text-amber-400" />
         <StatBox label="Mismatch" value={stats.mismatch} colour="text-red-400" />
