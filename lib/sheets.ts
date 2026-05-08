@@ -124,8 +124,10 @@ export function detectCategory(subject: string, body: string): EmailCategory {
   // Cancellation — check subject first, then body
   if (/\bcancel(led|lation)?\b/.test(subj)) return "Cancellation";
   if (/\bcancel(led|lation)?\b/.test(bodyLower)) return "Cancellation";
-  // Amendment — subject only (body often contains "update" / "change" in boilerplate)
-  // Require explicit amendment/revision words, not generic "update" or "change"
+  // Amendment — DS Smith use RE: replies and trailer-change/add-on language
+  if (subject.trimStart().toUpperCase().startsWith("RE:")) return "Amendment";
+  if (/trailer\s+(change|swap|swop|amendment)/.test(subj)) return "Amendment";
+  if (/\badd[\s-]?on\b/.test(subj)) return "Amendment";
   if (/\bamend(ment|ed|ing)?\b|\brevised?\b|\brevision\b|\bcorrect(ed|ion)?\b|\bmodif(ied|ication)\b/.test(subj)) return "Amendment";
   return "New Order";
 }
