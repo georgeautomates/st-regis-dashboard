@@ -60,9 +60,9 @@ export default function HomePage() {
     newOrders: emails.filter(e => e.category === "New Order").reduce((s, e) => s + e.job_count, 0),
     amendments: emails.filter(e => e.category === "Amendment").reduce((s, e) => s + e.job_count, 0),
     cancellations: emails.filter(e => e.category === "Cancellation").reduce((s, e) => s + e.job_count, 0),
-    fullMatch: emails.filter(e => e.worst_status === "MATCH").length,
-    partial: emails.filter(e => e.worst_status === "PARTIAL").length,
-    mismatch: emails.filter(e => e.worst_status === "MISMATCH").length,
+    fullMatch: emails.reduce((s, e) => s + e.match_count, 0),
+    partial: emails.reduce((s, e) => s + e.partial_count, 0),
+    mismatch: emails.reduce((s, e) => s + e.mismatch_count, 0),
     totalJobs: emails.reduce((s, e) => s + e.job_count, 0),
   }), [emails]);
 
