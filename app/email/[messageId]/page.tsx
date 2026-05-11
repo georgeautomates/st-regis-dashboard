@@ -256,7 +256,7 @@ function JobView({ job, review, onReviewSaved }: {
       {/* PDF */}
       {job.pdf_url && (
         <div className="w-64 shrink-0 border border-slate-800 rounded overflow-hidden">
-          <iframe src={job.pdf_url} className="w-full h-full" title="Booking form PDF" />
+          <iframe src={job.pdf_url.replace("/view", "/preview")} className="w-full h-full" title="Booking form PDF" />
         </div>
       )}
 
