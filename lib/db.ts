@@ -186,8 +186,11 @@ function rowToJob(r: Record<string, any>): Job {
     rpa_type:             String(r.rpa_type ?? ""),
     spot_result:          String(r.spot_result ?? ""),
     spot_reason:          String(r.spot_reason ?? ""),
-    // UI-compat stubs — not in st_regis_orders
-    business_type: "", service: "", goods_type: "", spaces: "", weight: "",
+    business_type:        String(r.business_type ?? ""),
+    service:              String(r.service ?? ""),
+    goods_type:           String(r.goods_type ?? ""),
+    spaces:               r.spaces != null ? String(r.spaces) : "",
+    weight:               r.weight != null ? String(r.weight) : "",
     model_agreement_score: "", email_body: "",
     m2_collection_org: "", m2_delivery_org: "", m2_price: "", m2_order_number: "",
     m2_collection_date: "", m2_delivery_date: "", m2_collection_time: "", m2_delivery_time: "",
