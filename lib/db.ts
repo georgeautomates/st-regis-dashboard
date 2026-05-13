@@ -6,7 +6,7 @@ let _pool: Pool | null = null;
 
 function getPool(): Pool {
   if (!_pool) {
-    _pool = new Pool({ connectionString: process.env.SUPABASE_POSTGRES_DSN });
+    _pool = new Pool({ connectionString: process.env.SUPABASE_POSTGRES_DSN, ssl: { rejectUnauthorized: false } });
   }
   return _pool;
 }
