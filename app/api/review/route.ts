@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveReview } from "@/lib/sheets";
+import { saveReview } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {

@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import type { Email, Job, ManualReview } from "@/lib/sheets";
+import type { Email, Job, ManualReview } from "@/lib/db";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -272,6 +272,11 @@ function JobView({ job, review, onReviewSaved }: {
         )}
 
         <Field label="Job Number" our={job.job_number} />
+        {job.extraction_method && (
+          <div className="text-xs text-slate-600 mb-2 px-2">
+            Extraction: <span className="text-slate-400">{job.extraction_method}</span>
+          </div>
+        )}
         <Field label="Collection Point" our={job.collection_point} proteo={hasProteo ? job.proteo_collection : undefined} />
         <Field label="Delivery Point"   our={job.delivery_point}   proteo={hasProteo ? job.proteo_delivery : undefined} />
         <Field label="Price"            our={job.price}            proteo={hasProteo ? job.proteo_price : undefined} />
@@ -309,13 +314,38 @@ function JobView({ job, review, onReviewSaved }: {
         )}
 
         {/* Confidence */}
-        {job.status && (
+        {job.confidence_status && (
           <div className={`mt-2 px-3 py-2 rounded text-xs font-bold border ${
-            job.status === "GREEN" ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
-            : job.status === "YELLOW" ? "bg-amber-950/40 border-amber-800 text-amber-300"
+            job.confidence_status === "GREEN" ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
+            : job.confidence_status === "YELLOW" ? "bg-amber-950/40 border-amber-800 text-amber-300"
             : "bg-red-950/40 border-red-800 text-red-300"
           }`}>
-            Confidence: {job.composite_score} — {job.status}
+            Confidence: {job.composite_score} — {job.confidence_status}
+          </div>
+        )}
+
+        {/* Category reasoning */}
+        {job.category_reasoning && (
+          <div className="mt-2 pt-2 border-t border-slate-800">
+            <div className="text-xs uppercase tracking-widest text-slate-500 mb-1">Email Classification</div>
+            <div className="text-xs text-slate-400 bg-slate-900 rounded px-3 py-2">
+              <span className="text-slate-500">{job.category_method} · {job.category_confidence} · </span>
+              {job.category_reasoning}
+              {job.referenced_job_number && (
+                <span className="ml-2 text-amber-400">ref: {job.referenced_job_number}</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* RPA status */}
+        {job.rpa_status && job.rpa_status !== "pending" && (
+          <div className={`mt-2 px-3 py-2 rounded text-xs font-bold border ${
+            job.rpa_status === "success" ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
+            : job.rpa_status === "failed" ? "bg-red-950/40 border-red-800 text-red-300"
+            : "bg-slate-900 border-slate-700 text-slate-400"
+          }`}>
+            RPA: {job.rpa_status}{job.rpa_type ? ` (${job.rpa_type})` : ""}
           </div>
         )}
 
@@ -342,11 +372,11 @@ function EmailDetailInner({ messageId }: { messageId: string }) {
   }, [searchParams]);
 
   useEffect(() => {
-    fetch("/api/emails")
+    fetch(`/api/email/${messageId}`)
       .then(r => r.json())
       .then(d => {
-        const found = (d.emails as Email[]).find(e => e.message_id === messageId) ?? null;
-        setEmail(found);
+        setEmail(d.email ?? null);
+        setReviews(d.reviews ?? {});
         setLoading(false);
       });
   }, [messageId]);

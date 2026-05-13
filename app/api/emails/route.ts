@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getEmails } from "@/lib/sheets";
+import { getEmails } from "@/lib/db";
 
 export const revalidate = 60;
 

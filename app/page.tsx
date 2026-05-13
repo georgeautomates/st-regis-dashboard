@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { Email, EmailCategory, JobMatchStatus } from "@/lib/sheets";
+import type { Email, EmailCategory, JobMatchStatus } from "@/lib/db";
 
 const CATEGORY_COLOURS: Record<EmailCategory, string> = {
   "New Order":    "bg-sky-900/50 text-sky-300 border border-sky-700/50",
