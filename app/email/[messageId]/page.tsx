@@ -36,8 +36,9 @@ function splitDT(dateVal: string, timeVal: string): [string, string] {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function Field({ label, our, proteo }: { label: string; our: string; proteo?: string }) {
-  const mismatch = proteo !== undefined && !liveMatch(our, proteo);
+function Field({ label, our, proteo, matched }: { label: string; our: string; proteo?: string; matched?: boolean }) {
+  // Use stored boolean when provided (authoritative Python comparison), fall back to client-side check
+  const mismatch = proteo !== undefined && (matched !== undefined ? !matched : !liveMatch(our, proteo));
   return (
     <div className={`mb-2 p-2 rounded ${mismatch ? "bg-red-950/40 border border-red-800/50" : "border border-transparent"}`}>
       <div className={`text-xs uppercase tracking-widest mb-0.5 ${mismatch ? "text-red-400" : "text-slate-500"}`}>
@@ -277,10 +278,10 @@ function JobView({ job, review, onReviewSaved }: {
             Extraction: <span className="text-slate-400">{job.extraction_method}</span>
           </div>
         )}
-        <Field label="Collection Point" our={job.collection_point} proteo={hasProteo ? job.proteo_collection : undefined} />
-        <Field label="Delivery Point"   our={job.delivery_point}   proteo={hasProteo ? job.proteo_delivery : undefined} />
-        <Field label="Price"            our={job.price}            proteo={hasProteo ? job.proteo_price : undefined} />
-        <Field label="Order Number"     our={job.order_number}     proteo={hasProteo ? job.proteo_order_number : undefined} />
+        <Field label="Collection Point" our={job.collection_point} proteo={hasProteo ? job.proteo_collection : undefined} matched={hasProteo ? job.collection_match : undefined} />
+        <Field label="Delivery Point"   our={job.delivery_point}   proteo={hasProteo ? job.proteo_delivery : undefined}   matched={hasProteo ? job.delivery_match : undefined} />
+        <Field label="Price"            our={job.price}            proteo={hasProteo ? job.proteo_price : undefined}       matched={hasProteo ? job.price_match : undefined} />
+        <Field label="Order Number"     our={job.order_number}     proteo={hasProteo ? job.proteo_order_number : undefined} matched={hasProteo ? job.order_number_match : undefined} />
 
         <div className="grid grid-cols-2 gap-2">
           <Field label="Business Type" our={job.business_type} proteo={hasProteo ? job.proteo_business_type : undefined} />
