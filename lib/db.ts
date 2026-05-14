@@ -194,7 +194,7 @@ function rowToJob(r: Record<string, any>): Job {
     goods_type:           String(r.goods_type ?? ""),
     spaces:               r.spaces != null ? String(r.spaces) : "",
     weight:               r.weight != null ? String(r.weight) : "",
-    model_agreement_score: "", email_body: "",
+    model_agreement_score: "", email_body: String(r.email_body ?? ""),
     m2_collection_org: "", m2_delivery_org: "", m2_price: "", m2_order_number: "",
     m2_collection_date: "", m2_delivery_date: "", m2_collection_time: "", m2_delivery_time: "",
     collection_date_match: false, delivery_date_match: false,

@@ -359,6 +359,26 @@ function JobView({ job, review, onReviewSaved }: {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+function EmailBodyPanel({ body }: { body: string }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!body) return null;
+  return (
+    <div className="px-6 py-2 border-b border-slate-800 shrink-0">
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+      >
+        {expanded ? "▾" : "▸"} Email body
+      </button>
+      {expanded && (
+        <div className="mt-2 text-xs text-slate-400 bg-slate-900 rounded px-3 py-2 whitespace-pre-wrap break-words max-h-48 overflow-y-auto border border-slate-800">
+          {body}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmailDetailInner({ messageId }: { messageId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -422,6 +442,8 @@ function EmailDetailInner({ messageId }: { messageId: string }) {
           {email.fibre_count > 0 && email.reels_count > 0 && ` · ${email.fibre_count} Fibre / ${email.reels_count} Reels`}
         </div>
       </div>
+
+      <EmailBodyPanel body={email.jobs[0]?.email_body ?? ""} />
 
       {/* Pagination — only shown for multi-job emails */}
       {totalJobs > 1 && (
