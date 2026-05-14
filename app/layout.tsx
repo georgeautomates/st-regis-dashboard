@@ -13,7 +13,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="border-b border-slate-800 px-6 py-3 flex items-center gap-4 shrink-0">
           <span className="text-xs uppercase tracking-widest text-slate-500">Firmin</span>
           <span className="text-slate-700">/</span>
-          <span className="font-bold text-slate-100 tracking-wide">St Regis Dashboard</span>
+          <a href="/" className="font-bold text-slate-100 tracking-wide hover:text-slate-300">St Regis Dashboard</a>
+          <span className="text-slate-700">|</span>
+          <a href="/manager" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Manager Review</a>
         </header>
         <main className="flex-1 overflow-hidden">{children}</main>
       </body>

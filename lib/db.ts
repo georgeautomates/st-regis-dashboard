@@ -303,6 +303,44 @@ export async function getReviewsForEmail(messageId: string): Promise<Record<stri
   return result;
 }
 
+export async function getAllReviews(): Promise<(ManualReview & {
+  job_number: string;
+  client_name: string;
+  message_id: string;
+  email_subject: string;
+  collection_point: string;
+  delivery_point: string;
+  price: string;
+  category: string;
+  processed_at: string;
+})[]> {
+  const pool = getPool();
+  const { rows } = await pool.query(`
+    SELECT job_number, client_name, message_id, email_subject,
+           collection_point, delivery_point, price, category, processed_at,
+           spot_result as verdict, spot_reason as reason
+    FROM st_regis_orders
+    WHERE spot_result IN ('PASS', 'FAIL')
+    ORDER BY processed_at DESC NULLS LAST
+  `);
+  return rows.map(r => ({
+    job_number:       String(r.job_number ?? ""),
+    client_name:      String(r.client_name ?? ""),
+    message_id:       String(r.message_id ?? ""),
+    email_subject:    String(r.email_subject ?? ""),
+    collection_point: String(r.collection_point ?? ""),
+    delivery_point:   String(r.delivery_point ?? ""),
+    price:            String(r.price ?? ""),
+    category:         String(r.category ?? ""),
+    processed_at:     r.processed_at ? String(r.processed_at) : "",
+    verdict:          r.verdict === "PASS" ? "PASS" : "FAIL",
+    reason:           String(r.reason ?? ""),
+    notes:            "",
+    reviewed_by:      "",
+    reviewed_at:      "",
+  }));
+}
+
 export async function saveReview(review: Omit<ManualReview, "reviewed_at">): Promise<void> {
   const pool = getPool();
   await pool.query(
