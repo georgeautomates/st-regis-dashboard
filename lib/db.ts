@@ -283,10 +283,10 @@ export async function getEmailById(messageId: string): Promise<Email | null> {
 export async function getReviewsForEmail(messageId: string): Promise<Record<string, ManualReview>> {
   const pool = getPool();
   const { rows } = await pool.query(
-    `SELECT job_number, spot_result as verdict, spot_reason as reason, '' as notes,
+    `SELECT job_number, manual_verdict as verdict, manual_reason as reason, '' as notes,
             '' as reviewed_by, '' as reviewed_at
      FROM st_regis_orders
-     WHERE message_id = $1 AND spot_result IS NOT NULL AND spot_result != ''`,
+     WHERE message_id = $1 AND manual_verdict IS NOT NULL AND manual_verdict != ''`,
     [messageId]
   );
   const result: Record<string, ManualReview> = {};
@@ -318,9 +318,9 @@ export async function getAllReviews(): Promise<(ManualReview & {
   const { rows } = await pool.query(`
     SELECT job_number, client_name, message_id, email_subject,
            collection_point, delivery_point, price, category, processed_at,
-           spot_result as verdict, spot_reason as reason
+           manual_verdict as verdict, manual_reason as reason
     FROM st_regis_orders
-    WHERE spot_result IN ('PASS', 'FAIL')
+    WHERE manual_verdict IN ('PASS', 'FAIL')
     ORDER BY processed_at DESC NULLS LAST
   `);
   return rows.map(r => ({
@@ -345,7 +345,7 @@ export async function saveReview(review: Omit<ManualReview, "reviewed_at">): Pro
   const pool = getPool();
   await pool.query(
     `UPDATE st_regis_orders
-     SET spot_result = $1, spot_reason = $2
+     SET manual_verdict = $1, manual_reason = $2
      WHERE job_number = $3`,
     [review.verdict, review.reason || review.notes, review.job_number]
   );
