@@ -414,7 +414,10 @@ function EmailDetailInner({ messageId }: { messageId: string }) {
           {email.subject || <span className="text-slate-600 italic">No subject</span>}
         </div>
         <div className="text-xs text-slate-600 mt-0.5">
-          {new Date(email.processed_at).toLocaleString("en-GB")}
+          {email.email_received_at
+            ? <>Received: {new Date(email.email_received_at).toLocaleString("en-GB")}</>
+            : <>Processed: {new Date(email.processed_at).toLocaleString("en-GB")}</>
+          }
           {email.fibre_count > 0 && email.reels_count > 0 && ` · ${email.fibre_count} Fibre / ${email.reels_count} Reels`}
         </div>
       </div>

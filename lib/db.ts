@@ -47,6 +47,7 @@ export type Job = {
   referenced_job_number: string;
   // Email
   email_subject: string;
+  email_received_at: string;
   // Extraction method
   extraction_method: string;
   // Scores
@@ -105,6 +106,7 @@ export type Email = {
   subject: string;
   category: EmailCategory;
   processed_at: string;
+  email_received_at: string;
   jobs: Job[];
   job_count: number;
   fibre_count: number;
@@ -170,6 +172,7 @@ function rowToJob(r: Record<string, any>): Job {
     category_reasoning:   String(r.category_reasoning ?? ""),
     referenced_job_number: String(r.referenced_job_number ?? ""),
     email_subject:        String(r.email_subject ?? ""),
+    email_received_at:    String(r.email_received_at ?? ""),
     extraction_method:    String(r.extraction_method ?? ""),
     composite_score:      r.composite_score != null ? String(r.composite_score) : "",
     confidence_status:    String(r.confidence_status ?? ""),
@@ -229,10 +232,11 @@ function buildEmail(msgId: string, jobs: Job[]): Email {
     .map(([r, n]) => n > 1 ? `${r} (×${n})` : r);
 
   return {
-    message_id:   msgId,
-    subject:      first.email_subject,
-    category:     first.category,
-    processed_at: first.processed_at,
+    message_id:        msgId,
+    subject:           first.email_subject,
+    category:          first.category,
+    processed_at:      first.processed_at,
+    email_received_at: first.email_received_at,
     jobs,
     job_count:    jobs.length,
     fibre_count:  jobs.filter(j => j.client_name.toLowerCase().includes("fibre")).length,

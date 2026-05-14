@@ -125,9 +125,10 @@ export default function HomePage() {
       {/* Table header */}
       <div className="px-6 py-2 border-b border-slate-800 grid grid-cols-12 gap-3 text-xs uppercase tracking-widest text-slate-600 shrink-0">
         <div className="col-span-1">Email ID</div>
-        <div className="col-span-3">Subject</div>
+        <div className="col-span-2">Subject</div>
+        <div className="col-span-2">Received</div>
         <div className="col-span-2">Category</div>
-        <div className="col-span-2">Jobs</div>
+        <div className="col-span-1">Jobs</div>
         <div className="col-span-2">Match Summary</div>
         <div className="col-span-2">Top Mismatch Reasons</div>
       </div>
@@ -137,7 +138,13 @@ export default function HomePage() {
         {filtered.length === 0 && (
           <div className="text-center text-slate-600 text-sm py-16">No emails found</div>
         )}
-        {filtered.map(email => (
+        {filtered.map(email => {
+          const receivedDate = email.email_received_at
+            ? (() => {
+                try { return new Date(email.email_received_at); } catch { return null; }
+              })()
+            : null;
+          return (
           <div
             key={email.message_id}
             onClick={() => router.push(`/email/${email.message_id}`)}
@@ -147,8 +154,19 @@ export default function HomePage() {
               {email.message_id.slice(0, 10)}…
             </div>
 
-            <div className="col-span-3 text-sm text-slate-300 truncate" title={email.subject}>
+            <div className="col-span-2 text-sm text-slate-300 truncate" title={email.subject}>
               {email.subject || <span className="text-slate-600 italic">No subject</span>}
+            </div>
+
+            <div className="col-span-2 text-xs text-slate-400">
+              {receivedDate ? (
+                <>
+                  <div>{receivedDate.toLocaleDateString("en-GB")}</div>
+                  <div className="text-slate-600">{receivedDate.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>
+                </>
+              ) : (
+                <span className="text-slate-700">—</span>
+              )}
             </div>
 
             <div className="col-span-2">
@@ -157,17 +175,17 @@ export default function HomePage() {
               </span>
             </div>
 
-            <div className="col-span-2 text-sm">
+            <div className="col-span-1 text-sm">
               <span className="text-slate-200 font-medium">{email.job_count}</span>
               <span className="text-slate-600 text-xs ml-1">job{email.job_count !== 1 ? "s" : ""}</span>
               {email.fibre_count > 0 && email.reels_count > 0 && (
-                <div className="text-xs text-slate-500 mt-0.5">{email.fibre_count} Fibre · {email.reels_count} Reels</div>
+                <div className="text-xs text-slate-500 mt-0.5">{email.fibre_count}F · {email.reels_count}R</div>
               )}
               {email.fibre_count > 0 && email.reels_count === 0 && (
-                <div className="text-xs text-slate-500 mt-0.5">Fibre A/C</div>
+                <div className="text-xs text-slate-500 mt-0.5">Fibre</div>
               )}
               {email.reels_count > 0 && email.fibre_count === 0 && (
-                <div className="text-xs text-slate-500 mt-0.5">Reels A/C</div>
+                <div className="text-xs text-slate-500 mt-0.5">Reels</div>
               )}
             </div>
 
@@ -185,7 +203,8 @@ export default function HomePage() {
               }
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
