@@ -152,6 +152,74 @@ function ManualReviewPanel({ job, existing, onSaved }: {
   );
 }
 
+function SubjectInstructionsPanel({ job }: { job: Job }) {
+  const explanation = job.subject_explanation;
+  const subjJobs = job.subject_job_numbers ? job.subject_job_numbers.split(",").map(s => s.trim()).filter(Boolean) : [];
+  let instructions: Record<string, string> = {};
+  try {
+    if (job.subject_instructions) instructions = JSON.parse(job.subject_instructions);
+  } catch {}
+
+  const hasContent = explanation || subjJobs.length > 0 ||
+    instructions.collection_time || instructions.delivery_time ||
+    instructions.booking_note || instructions.other_notes;
+
+  if (!hasContent) return null;
+
+  return (
+    <div className="mt-4 pt-4 border-t border-slate-700">
+      <div className="text-xs uppercase tracking-widest text-slate-500 mb-3">Subject Instructions</div>
+
+      {explanation && (
+        <div className="text-xs text-slate-300 bg-slate-900 rounded px-3 py-2 mb-3 leading-relaxed">
+          {explanation}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+        {subjJobs.length > 0 && (
+          <div className="col-span-2 flex items-center gap-2 mb-1">
+            <span className="text-slate-500 shrink-0">Job numbers in subject</span>
+            <div className="flex gap-1 flex-wrap">
+              {subjJobs.map(j => (
+                <span key={j} className={`font-mono px-1.5 py-0.5 rounded text-xs border ${
+                  j === job.job_number
+                    ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
+                    : "bg-slate-800 border-slate-700 text-slate-400"
+                }`}>{j}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {instructions.collection_time && (
+          <>
+            <span className="text-slate-500">Collection time (subject)</span>
+            <span className="font-mono text-slate-200">{instructions.collection_time}</span>
+          </>
+        )}
+        {instructions.delivery_time && (
+          <>
+            <span className="text-slate-500">Delivery time (subject)</span>
+            <span className="font-mono text-slate-200">{instructions.delivery_time}</span>
+          </>
+        )}
+        {instructions.booking_note && (
+          <>
+            <span className="text-slate-500">Booking</span>
+            <span className="text-slate-200">{instructions.booking_note}</span>
+          </>
+        )}
+        {instructions.other_notes && (
+          <>
+            <span className="text-slate-500">Notes</span>
+            <span className="text-slate-200">{instructions.other_notes}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EmailCoherencePanel({ job }: { job: Job }) {
   const subject = job.email_subject;
   const body = job.email_body?.slice(0, 500);
@@ -374,6 +442,7 @@ function JobView({ job, review, onReviewSaved }: {
           </div>
         )}
 
+        <SubjectInstructionsPanel job={job} />
         <EmailCoherencePanel job={job} />
         <ManualReviewPanel job={job} existing={review} onSaved={onReviewSaved} />
       </div>

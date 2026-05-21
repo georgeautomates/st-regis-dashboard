@@ -99,6 +99,10 @@ export type Job = {
   proteo_weight: string;
   spot_confidence: string;
   spot_flag_category: string;
+  // Subject-line parsing
+  subject_job_numbers: string;
+  subject_instructions: string;
+  subject_explanation: string;
 };
 
 export type Email = {
@@ -203,6 +207,9 @@ function rowToJob(r: Record<string, any>): Job {
     proteo_business_type: "", proteo_service: "", proteo_goods_type: "",
     proteo_pallets: "", proteo_spaces: "", proteo_weight: "",
     spot_confidence: "", spot_flag_category: "",
+    subject_job_numbers:  String(r.subject_job_numbers ?? ""),
+    subject_instructions: String(r.subject_instructions ?? ""),
+    subject_explanation:  String(r.subject_explanation ?? ""),
   };
 }
 
