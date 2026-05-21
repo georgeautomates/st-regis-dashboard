@@ -155,12 +155,15 @@ function ManualReviewPanel({ job, existing, onSaved }: {
 function SubjectInstructionsPanel({ job }: { job: Job }) {
   const explanation = job.subject_explanation;
   const subjJobs = job.subject_job_numbers ? job.subject_job_numbers.split(",").map(s => s.trim()).filter(Boolean) : [];
-  let instructions: Record<string, string> = {};
+  let instructions: Record<string, any> = {};
   try {
     if (job.subject_instructions) instructions = JSON.parse(job.subject_instructions);
   } catch {}
 
-  const hasContent = explanation || subjJobs.length > 0 ||
+  const destinations: string[] = Array.isArray(instructions.destinations) ? instructions.destinations : [];
+
+  const hasContent = explanation || subjJobs.length > 0 || destinations.length > 0 ||
+    instructions.product_type || instructions.delivery_date ||
     instructions.collection_time || instructions.delivery_time ||
     instructions.booking_note || instructions.other_notes;
 
@@ -190,6 +193,24 @@ function SubjectInstructionsPanel({ job }: { job: Job }) {
               ))}
             </div>
           </div>
+        )}
+        {instructions.product_type && (
+          <>
+            <span className="text-slate-500">Product type</span>
+            <span className="text-slate-200">{instructions.product_type}</span>
+          </>
+        )}
+        {instructions.delivery_date && (
+          <>
+            <span className="text-slate-500">Delivery date (subject)</span>
+            <span className="font-mono text-slate-200">{instructions.delivery_date}</span>
+          </>
+        )}
+        {destinations.length > 0 && (
+          <>
+            <span className="text-slate-500">Destinations</span>
+            <span className="text-slate-200">{destinations.join(", ")}</span>
+          </>
         )}
         {instructions.collection_time && (
           <>
