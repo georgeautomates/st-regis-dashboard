@@ -82,6 +82,9 @@ function ExtractionBadge({ method }: { method: string }) {
   if (method === "ai_failed") return (
     <span className="text-xs text-red-400 bg-red-900/30 border border-red-800/50 px-2 py-0.5 rounded">AI FAILED</span>
   );
+  if (method === "not_in_pdf") return (
+    <span className="text-xs text-slate-400 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded">NOT IN PDF</span>
+  );
   return null;
 }
 
@@ -173,9 +176,10 @@ export default function TestPage() {
       <div className="px-6 py-2 border-b border-slate-800 bg-slate-900/40 shrink-0">
         <p className="text-xs text-slate-500">
           Send test emails from <span className="text-slate-300 font-mono">georgespainwarner@gmail.com</span> to{" "}
-          <span className="text-slate-300 font-mono">george.automates.ai@gmail.com</span> with a DS Smith PDF attached
-          and the job number in the subject line (e.g. <span className="text-slate-300 font-mono">2612345</span>).
-          The pipeline extracts the job number from the PDF and checks it matches the subject.
+          <span className="text-slate-300 font-mono">george.automates.ai@gmail.com</span> with a DS Smith PDF attached.
+          Put the job numbers you want processed in the subject line (e.g. <span className="text-slate-300 font-mono">2612345 2612346</span>).
+          The system processes <strong className="text-slate-300">only those jobs</strong> — MATCH means the job was found in the PDF,
+          MISMATCH means a subject-listed job was missing from the PDF.
         </p>
       </div>
 
