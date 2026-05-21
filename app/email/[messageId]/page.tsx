@@ -241,6 +241,25 @@ function EmailCoherencePanel({ job }: { job: Job }) {
   );
 }
 
+function useFullAddress(point: string): string | null {
+  const [addr, setAddr] = useState<string | null>(null);
+  useEffect(() => {
+    if (!point) return;
+    fetch(`/api/location?point=${encodeURIComponent(point)}`)
+      .then(r => r.json())
+      .then(d => setAddr(d.full_address ?? null))
+      .catch(() => setAddr(null));
+  }, [point]);
+  return addr;
+}
+
+function AddressLine({ address }: { address: string | null }) {
+  if (!address) return null;
+  return (
+    <div className="text-xs text-slate-500 mt-0.5 px-2 pb-1 font-mono">{address}</div>
+  );
+}
+
 function JobView({ job, review, onReviewSaved }: {
   job: Job;
   review?: ManualReview;
@@ -248,6 +267,9 @@ function JobView({ job, review, onReviewSaved }: {
 }) {
   const [pColDate, pColTime] = splitDT(job.proteo_collection_date, job.proteo_collection_time);
   const [pDelDate, pDelTime] = splitDT(job.proteo_delivery_date, job.proteo_delivery_time);
+
+  const collectionFullAddress = useFullAddress(job.collection_point);
+  const deliveryFullAddress   = useFullAddress(job.delivery_point);
 
   const hasProteo = !!job.proteo_collection;
 
@@ -279,7 +301,9 @@ function JobView({ job, review, onReviewSaved }: {
           </div>
         )}
         <Field label="Collection Point" our={job.collection_point} proteo={hasProteo ? job.proteo_collection : undefined} matched={hasProteo ? job.collection_match : undefined} />
+        <AddressLine address={collectionFullAddress} />
         <Field label="Delivery Point"   our={job.delivery_point}   proteo={hasProteo ? job.proteo_delivery : undefined}   matched={hasProteo ? job.delivery_match : undefined} />
+        <AddressLine address={deliveryFullAddress} />
         <Field label="Price"            our={job.price}            proteo={hasProteo ? job.proteo_price : undefined}       matched={hasProteo ? job.price_match : undefined} />
         <Field label="Order Number"     our={job.order_number}     proteo={hasProteo ? job.proteo_order_number : undefined} matched={hasProteo ? job.order_number_match : undefined} />
 
@@ -420,7 +444,7 @@ function EmailDetailInner({ messageId }: { messageId: string }) {
       {/* Email header */}
       <div className="px-6 py-3 border-b border-slate-800 shrink-0">
         <div className="flex items-center gap-3 mb-1">
-          <button onClick={() => router.push("/")}
+          <button onClick={() => router.back()}
             className="text-xs text-slate-500 hover:text-slate-300 transition-colors">← Back</button>
           <span className="text-slate-700">/</span>
           <span className="font-mono text-xs text-slate-500">{email.message_id}</span>

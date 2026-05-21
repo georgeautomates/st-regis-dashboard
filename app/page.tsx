@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import type { Email, EmailCategory, JobMatchStatus } from "@/lib/db";
 
 const CATEGORY_COLOURS: Record<EmailCategory, string> = {
@@ -27,14 +27,30 @@ function StatBox({ label, value, colour }: { label: string; value: string | numb
   );
 }
 
-export default function HomePage() {
+function HomePageInner() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const search = searchParams.get("q") ?? "";
+  const categoryFilter = (searchParams.get("cat") ?? "ALL") as EmailCategory | "ALL";
+  const statusFilter = (searchParams.get("status") ?? "ALL") as JobMatchStatus | "ALL";
+
+  function setParam(key: string, value: string, defaultVal: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === defaultVal) params.delete(key);
+    else params.set(key, value);
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
+
+  const setSearch = (v: string) => setParam("q", v, "");
+  const setCategoryFilter = (v: EmailCategory | "ALL") => setParam("cat", v, "ALL");
+  const setStatusFilter = (v: JobMatchStatus | "ALL") => setParam("status", v, "ALL");
+
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<EmailCategory | "ALL">("ALL");
-  const [statusFilter, setStatusFilter] = useState<JobMatchStatus | "ALL">("ALL");
 
   useEffect(() => {
     fetch("/api/emails")
@@ -207,5 +223,13 @@ export default function HomePage() {
         })}
       </div>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-full text-slate-500 text-sm">Loading…</div>}>
+      <HomePageInner />
+    </Suspense>
   );
 }
