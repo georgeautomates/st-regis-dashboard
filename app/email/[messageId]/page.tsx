@@ -568,6 +568,12 @@ function EmailDetailInner({ messageId }: { messageId: string }) {
           <span className="text-xs text-slate-400">
             Job <span className="text-slate-200 font-bold">{jobIndex + 1}</span> of {totalJobs}
             <span className="ml-2 text-slate-600">{job.job_number}</span>
+            {job.client_name === "St Regis Reels" && (
+              <span className="ml-2 text-xs font-bold text-purple-300 border border-purple-700/60 bg-purple-950/40 px-1.5 py-0.5">Reels</span>
+            )}
+            {job.client_name === "St Regis Fibre A/C" && (
+              <span className="ml-2 text-xs font-bold text-emerald-300 border border-emerald-700/60 bg-emerald-950/40 px-1.5 py-0.5">Fibre</span>
+            )}
             <span className={`ml-2 font-medium ${STATUS_COLOURS[job.match_status]}`}>{job.match_status}</span>
           </span>
           <button onClick={() => navigate(jobIndex + 1)} disabled={jobIndex === totalJobs - 1}
