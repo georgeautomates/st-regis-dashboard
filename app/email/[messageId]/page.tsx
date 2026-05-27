@@ -384,6 +384,7 @@ function JobView({ job, review, onReviewSaved }: {
         )}
 
         <Field label="Job Number" our={job.job_number} />
+        <Field label="Manpack Ref" our={job.job_number} />
         {job.extraction_method && (
           <div className="text-xs text-slate-600 mb-2 px-2">
             Extraction: <span className="text-slate-400">{job.extraction_method}</span>
