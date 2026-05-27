@@ -385,6 +385,14 @@ function JobView({ job, review, onReviewSaved }: {
 
         <Field label="Job Number" our={job.job_number} />
         <Field label="Manpack Ref" our={job.job_number} />
+        <div className="px-2 mb-2">
+          {job.client_name === "St Regis Reels" && (
+            <span className="text-xs font-bold text-purple-300 border border-purple-700/60 bg-purple-950/40 px-1.5 py-0.5">Reels</span>
+          )}
+          {job.client_name === "St Regis Fibre A/C" && (
+            <span className="text-xs font-bold text-emerald-300 border border-emerald-700/60 bg-emerald-950/40 px-1.5 py-0.5">Fibre</span>
+          )}
+        </div>
         {job.extraction_method && (
           <div className="text-xs text-slate-600 mb-2 px-2">
             Extraction: <span className="text-slate-400">{job.extraction_method}</span>
