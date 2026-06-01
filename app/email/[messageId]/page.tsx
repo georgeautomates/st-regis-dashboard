@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import type { Email, Job, ManualReview } from "@/lib/db";
-import { hasLocationFlag } from "@/lib/db";
+import { hasLocationFlag } from "@/lib/utils";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
