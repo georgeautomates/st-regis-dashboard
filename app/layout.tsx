@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span className="text-slate-700">|</span>
           <a href="/manager" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Manager Review</a>
           <a href="/test" className="text-xs text-teal-400 hover:text-teal-300 transition-colors">Subject-Line Test</a>
+          <a href="/log" className="text-xs text-sky-400 hover:text-sky-300 transition-colors">System Log</a>
         </header>
         <main className="flex-1 overflow-hidden">{children}</main>
       </body>
