@@ -192,8 +192,13 @@ function HomePageInner() {
             </div>
 
             <div className="col-span-1 text-sm">
-              <span className="text-slate-200 font-medium">{email.job_count}</span>
-              <span className="text-slate-600 text-xs ml-1">job{email.job_count !== 1 ? "s" : ""}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-200 font-medium">{email.job_count}</span>
+                <span className="text-slate-600 text-xs">job{email.job_count !== 1 ? "s" : ""}</span>
+                {email.has_location_flag && (
+                  <span className="text-xs font-bold text-orange-400 border border-orange-700/60 bg-orange-950/40 px-1 py-0.5 rounded" title="Unexpected collection/delivery location">⚠ loc</span>
+                )}
+              </div>
               {email.fibre_count > 0 && email.reels_count > 0 && (
                 <div className="text-xs text-slate-500 mt-0.5">{email.fibre_count}F · {email.reels_count}R</div>
               )}

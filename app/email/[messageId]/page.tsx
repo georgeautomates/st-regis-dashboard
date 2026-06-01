@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import type { Email, Job, ManualReview } from "@/lib/db";
+import { hasLocationFlag } from "@/lib/db";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -398,8 +399,18 @@ function JobView({ job, review, onReviewSaved }: {
             Extraction: <span className="text-slate-400">{job.extraction_method}</span>
           </div>
         )}
+        {hasLocationFlag(job) && job.client_name === "St Regis Reels" && (
+          <div className="mx-2 mb-1 px-3 py-2 rounded border border-orange-700/60 bg-orange-950/40 text-xs text-orange-300 font-medium">
+            ⚠ Unexpected collection point — Reels should always collect from DS Smith
+          </div>
+        )}
         <Field label="Collection Point" our={job.collection_point} proteo={hasProteo ? job.proteo_collection : undefined} matched={hasProteo ? job.collection_match : undefined} />
         <AddressLine address={collectionFullAddress} />
+        {hasLocationFlag(job) && job.client_name === "St Regis Fibre A/C" && (
+          <div className="mx-2 mb-1 px-3 py-2 rounded border border-orange-700/60 bg-orange-950/40 text-xs text-orange-300 font-medium">
+            ⚠ Unexpected delivery point — Fibre should always deliver to DS Smith
+          </div>
+        )}
         <Field label="Delivery Point"   our={job.delivery_point}   proteo={hasProteo ? job.proteo_delivery : undefined}   matched={hasProteo ? job.delivery_match : undefined} />
         <AddressLine address={deliveryFullAddress} />
         <Field label="Price"            our={job.price}            proteo={hasProteo ? job.proteo_price : undefined}       matched={hasProteo ? job.price_match : undefined} />
