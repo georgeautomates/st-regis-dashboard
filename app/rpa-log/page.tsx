@@ -17,6 +17,7 @@ type RpaRun = {
   duration_ms: number | null;
   error: string | null;
   steps?: RpaStep[];
+  sqa_result?: SqaResult | null;
 };
 
 type RpaStep = {
@@ -25,6 +26,23 @@ type RpaStep = {
   attempt: number;
   output: Record<string, unknown>;
   ts: string;
+};
+
+type SqaField = {
+  field: string;
+  rpa_value: string;
+  proteo_value: string;
+  result: "MATCH" | "MISMATCH" | "MISSING";
+};
+
+type SqaResult = {
+  status: "PASS" | "PARTIAL" | "FAIL" | "NO_PROTEO_DATA";
+  run_at: string;
+  match: number;
+  mismatch: number;
+  missing: number;
+  has_proteo: boolean;
+  fields: SqaField[];
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -96,6 +114,87 @@ function StepOutputPanel({ step }: { step: RpaStep }) {
   );
 }
 
+// ── SQA panel ─────────────────────────────────────────────────────────────────
+
+const SQA_STATUS_COLOURS: Record<string, string> = {
+  PASS:           "bg-emerald-950/60 border-emerald-700/60 text-emerald-300",
+  PARTIAL:        "bg-amber-950/60 border-amber-700/60 text-amber-300",
+  FAIL:           "bg-red-950/60 border-red-700/60 text-red-300",
+  NO_PROTEO_DATA: "bg-slate-800/60 border-slate-600/60 text-slate-400",
+};
+
+const FIELD_RESULT_COLOURS: Record<string, string> = {
+  MATCH:   "text-emerald-400",
+  MISMATCH:"text-red-400",
+  MISSING: "text-slate-500",
+};
+
+const FIELD_RESULT_ICONS: Record<string, string> = {
+  MATCH:   "✓",
+  MISMATCH:"✗",
+  MISSING: "—",
+};
+
+function SqaPanel({ sqa }: { sqa: SqaResult | null | undefined }) {
+  if (sqa === undefined) {
+    return (
+      <div className="border-t border-slate-800 px-6 py-4">
+        <div className="text-xs uppercase tracking-widest text-slate-600 mb-3">SQA Check</div>
+        <div className="text-slate-600 text-xs italic">Loading SQA data…</div>
+      </div>
+    );
+  }
+
+  if (sqa === null) {
+    return (
+      <div className="border-t border-slate-800 px-6 py-4">
+        <div className="text-xs uppercase tracking-widest text-slate-600 mb-3">SQA Check</div>
+        <div className="text-slate-600 text-xs italic">Not yet checked — runs nightly at 03:00</div>
+      </div>
+    );
+  }
+
+  const statusLabel = sqa.status === "NO_PROTEO_DATA" ? "NO PROTEO" : sqa.status;
+
+  return (
+    <div className="border-t border-slate-800 px-6 py-4 shrink-0">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="text-xs uppercase tracking-widest text-slate-600">SQA Check</div>
+        <span className={`text-xs px-2 py-0.5 rounded border font-bold ${SQA_STATUS_COLOURS[sqa.status] ?? SQA_STATUS_COLOURS.FAIL}`}>
+          {statusLabel}
+        </span>
+        <span className="text-xs text-slate-500">
+          {sqa.match}✓&nbsp; {sqa.mismatch}✗&nbsp; {sqa.missing}—
+        </span>
+        <span className="ml-auto text-xs text-slate-600">{fmtTime(sqa.run_at)}</span>
+      </div>
+
+      {sqa.status === "NO_PROTEO_DATA" ? (
+        <div className="text-slate-500 text-xs italic">No matching row in Verification sheet — order may not be in Proteo yet.</div>
+      ) : (
+        <div className="space-y-1">
+          {sqa.fields.map(f => (
+            <div key={f.field} className="grid grid-cols-[140px_1fr_24px_1fr] items-center gap-2 rounded px-3 py-1.5 border border-slate-800 bg-slate-900/60 text-xs">
+              <div className="text-slate-500 uppercase tracking-widest truncate">{f.field.replace(/_/g, " ")}</div>
+              <div className="font-mono text-slate-200 truncate">{f.rpa_value || <span className="text-slate-600 italic">—</span>}</div>
+              <div className={`text-center font-bold ${FIELD_RESULT_COLOURS[f.result]}`}>
+                {FIELD_RESULT_ICONS[f.result]}
+              </div>
+              <div className="font-mono text-slate-400 truncate">{f.proteo_value || <span className="text-slate-600 italic">—</span>}</div>
+            </div>
+          ))}
+          <div className="mt-1 grid grid-cols-[140px_1fr_24px_1fr] gap-2 px-3 text-xs text-slate-600 uppercase tracking-widest">
+            <div />
+            <div>RPA filled</div>
+            <div />
+            <div>Proteo actual</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function RpaLogPage() {
@@ -118,7 +217,11 @@ export default function RpaLogPage() {
     if (run.steps) { setSelectedRun(run); return; }
     setLoadingDetail(true);
     const d = await fetch(`/api/rpa-runs/${run.id}`).then(r => r.json());
-    const full: RpaRun = { ...run, steps: d.run?.steps ?? [] };
+    const full: RpaRun = {
+      ...run,
+      steps:      d.run?.steps ?? [],
+      sqa_result: d.run?.sqa_result ?? null,
+    };
     setRuns(prev => prev.map(r => r.id === run.id ? full : r));
     setSelectedRun(full);
     setLoadingDetail(false);
@@ -206,6 +309,9 @@ export default function RpaLogPage() {
                   )}
                   {run.order_found_on_list === true  && <span className="text-emerald-600">on list ✓</span>}
                   {run.order_found_on_list === false && <span className="text-amber-600">not on list</span>}
+                  {run.sqa_result?.status === "PASS"    && <span className="text-emerald-500">SQA ✓</span>}
+                  {run.sqa_result?.status === "FAIL"    && <span className="text-red-500">SQA ✗</span>}
+                  {run.sqa_result?.status === "PARTIAL" && <span className="text-amber-500">SQA ~</span>}
                   <span className="ml-auto">{fmt(run.duration_ms)}</span>
                 </div>
               </button>
@@ -296,6 +402,9 @@ export default function RpaLogPage() {
                   <div className="text-slate-600 text-sm">Select a step above to see its output</div>
                 )}
               </div>
+
+              {/* SQA section */}
+              <SqaPanel sqa={selectedRun.sqa_result} />
             </>
           )}
         </div>

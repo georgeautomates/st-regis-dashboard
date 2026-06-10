@@ -14,7 +14,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   try {
     const { rows } = await getPool().query(
-      `SELECT * FROM rpa_runs WHERE id = $1`,
+      `SELECT id, run_at, job_number, client_name, status, success,
+              failed_step, screenshot_url, order_found_on_list, duration_ms,
+              steps, error, sqa_result
+       FROM rpa_runs WHERE id = $1`,
       [id]
     );
     if (rows.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });

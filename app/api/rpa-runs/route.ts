@@ -14,7 +14,8 @@ export async function GET() {
   try {
     const { rows } = await getPool().query(`
       SELECT id, run_at, job_number, client_name, status, success,
-             failed_step, screenshot_url, order_found_on_list, duration_ms, error
+             failed_step, screenshot_url, order_found_on_list, duration_ms, error,
+             sqa_result
       FROM rpa_runs
       ORDER BY run_at DESC
       LIMIT 500
