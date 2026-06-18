@@ -334,40 +334,20 @@ export default function RpaLogPage() {
           {selectedRun && !loadingDetail && (
             <>
               {/* Run header */}
-              <div className="px-6 py-3 border-b border-slate-800 shrink-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className={`text-xs px-2 py-0.5 rounded border font-bold ${STATUS_COLOURS[selectedRun.status]}`}>
-                    {selectedRun.status}
-                  </span>
-                  <span className="text-xs text-slate-500 font-mono">{fmtTime(selectedRun.run_at)}</span>
-                  <span className="text-xs text-slate-600">{fmt(selectedRun.duration_ms)}</span>
-                  {selectedRun.order_found_on_list === true && (
-                    <span className="text-xs px-2 py-0.5 rounded border border-emerald-700/60 bg-emerald-950/40 text-emerald-300">
-                      found on portal list ✓
-                    </span>
-                  )}
-                  {selectedRun.order_found_on_list === false && (
-                    <span className="text-xs px-2 py-0.5 rounded border border-amber-700/60 bg-amber-950/40 text-amber-300">
-                      not on portal list
-                    </span>
-                  )}
-                  {selectedRun.screenshot_url && (
-                    <a
-                      href={selectedRun.screenshot_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-auto text-xs text-sky-400 hover:text-sky-300"
-                    >
-                      Screenshot ↗
-                    </a>
-                  )}
-                </div>
-                <div className="text-base text-slate-100 font-mono">{selectedRun.job_number}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{selectedRun.client_name}</div>
-                {selectedRun.error && (
-                  <div className="mt-2 px-3 py-1.5 rounded border border-red-800 bg-red-950/40 text-xs text-red-300 font-mono">
-                    {selectedRun.error}
-                  </div>
+              <div className="px-6 py-3 border-b border-slate-800 shrink-0 flex items-center gap-3">
+                <span className="text-base text-slate-100 font-mono font-bold">{selectedRun.job_number}</span>
+                <span className="text-xs text-slate-500">{selectedRun.client_name}</span>
+                <span className="text-xs text-slate-600 font-mono">{fmtTime(selectedRun.run_at)}</span>
+                <span className="text-xs text-slate-600">{fmt(selectedRun.duration_ms)}</span>
+                {selectedRun.screenshot_url && (
+                  <a
+                    href={selectedRun.screenshot_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto text-xs text-sky-400 hover:text-sky-300"
+                  >
+                    Screenshot ↗
+                  </a>
                 )}
               </div>
 
@@ -394,17 +374,57 @@ export default function RpaLogPage() {
                 </div>
               </div>
 
-              {/* Step output */}
-              <div className="flex-1 overflow-hidden px-6 py-4">
-                {selectedStep ? (
-                  <StepOutputPanel step={selectedStep} />
-                ) : (
-                  <div className="text-slate-600 text-sm">Select a step above to see its output</div>
-                )}
-              </div>
+              {/* Output + SQA Review side by side */}
+              <div className="flex-1 flex overflow-hidden divide-x divide-slate-800 min-h-0">
 
-              {/* SQA section */}
-              <SqaPanel sqa={selectedRun.sqa_result} />
+                {/* Left: step output */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  <div className="text-xs uppercase tracking-widest text-slate-600 mb-3">Output</div>
+                  {selectedStep ? (
+                    <StepOutputPanel step={selectedStep} />
+                  ) : (
+                    <div className="text-slate-600 text-sm">Select a step above to see its output</div>
+                  )}
+                </div>
+
+                {/* Right: status code + SQA review */}
+                <div className="w-80 shrink-0 flex flex-col overflow-hidden">
+
+                  {/* Status Code */}
+                  <div className="px-4 py-3 border-b border-slate-800 shrink-0">
+                    <div className="text-xs uppercase tracking-widest text-slate-600 mb-2">Status Code</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-xs px-2 py-0.5 rounded border font-bold ${STATUS_COLOURS[selectedRun.status] ?? STATUS_COLOURS.FAILED}`}>
+                        {selectedRun.status}
+                      </span>
+                      {selectedRun.order_found_on_list === true && (
+                        <span className="text-xs px-2 py-0.5 rounded border border-emerald-700/60 bg-emerald-950/40 text-emerald-300">
+                          on list ✓
+                        </span>
+                      )}
+                      {selectedRun.order_found_on_list === false && (
+                        <span className="text-xs px-2 py-0.5 rounded border border-amber-700/60 bg-amber-950/40 text-amber-300">
+                          not on list
+                        </span>
+                      )}
+                      {selectedRun.failed_step && (
+                        <span className="w-full text-xs text-red-400 font-mono mt-1">✗ {selectedRun.failed_step}</span>
+                      )}
+                    </div>
+                    {selectedRun.error && (
+                      <div className="mt-2 px-2 py-1.5 rounded border border-red-800 bg-red-950/40 text-xs text-red-300 font-mono break-all">
+                        {selectedRun.error}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* SQA Review */}
+                  <div className="flex-1 overflow-y-auto">
+                    <SqaPanel sqa={selectedRun.sqa_result} />
+                  </div>
+
+                </div>
+              </div>
             </>
           )}
         </div>
