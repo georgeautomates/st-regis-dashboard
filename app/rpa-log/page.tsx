@@ -339,17 +339,29 @@ export default function RpaLogPage() {
                 <span className="text-xs text-slate-500">{selectedRun.client_name}</span>
                 <span className="text-xs text-slate-600 font-mono">{fmtTime(selectedRun.run_at)}</span>
                 <span className="text-xs text-slate-600">{fmt(selectedRun.duration_ms)}</span>
-                {selectedRun.screenshot_url && (
-                  <a
-                    href={selectedRun.screenshot_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-auto text-xs text-sky-400 hover:text-sky-300"
-                  >
-                    Screenshot ↗
-                  </a>
-                )}
               </div>
+
+              {/* Screenshot inline */}
+              {selectedRun.screenshot_url && (
+                <div className="px-6 py-3 border-b border-slate-800 shrink-0">
+                  <div className="text-xs uppercase tracking-widest text-slate-600 mb-2">
+                    Screenshot
+                    <a
+                      href={selectedRun.screenshot_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-3 normal-case text-sky-500 hover:text-sky-400"
+                    >
+                      open full ↗
+                    </a>
+                  </div>
+                  <img
+                    src={selectedRun.screenshot_url}
+                    alt={`Screenshot for job ${selectedRun.job_number}`}
+                    className="max-h-64 rounded border border-slate-700 object-contain"
+                  />
+                </div>
+              )}
 
               {/* Step chips */}
               <div className="px-6 py-3 border-b border-slate-800 shrink-0">
@@ -374,7 +386,35 @@ export default function RpaLogPage() {
                 </div>
               </div>
 
-              {/* Output + SQA Review side by side */}
+              {/* Status Code — below steps, at a glance */}
+              <div className="px-6 py-3 border-b border-slate-800 shrink-0">
+                <div className="text-xs uppercase tracking-widest text-slate-600 mb-2">Status</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-xs px-2 py-0.5 rounded border font-bold ${STATUS_COLOURS[selectedRun.status] ?? STATUS_COLOURS.FAILED}`}>
+                    {selectedRun.status}
+                  </span>
+                  {selectedRun.order_found_on_list === true && (
+                    <span className="text-xs px-2 py-0.5 rounded border border-emerald-700/60 bg-emerald-950/40 text-emerald-300">
+                      on list ✓
+                    </span>
+                  )}
+                  {selectedRun.order_found_on_list === false && (
+                    <span className="text-xs px-2 py-0.5 rounded border border-amber-700/60 bg-amber-950/40 text-amber-300">
+                      not on list
+                    </span>
+                  )}
+                  {selectedRun.failed_step && (
+                    <span className="text-xs text-red-400 font-mono">✗ {selectedRun.failed_step}</span>
+                  )}
+                </div>
+                {selectedRun.error && (
+                  <div className="mt-2 px-2 py-1.5 rounded border border-red-800 bg-red-950/40 text-xs text-red-300 font-mono break-all">
+                    {selectedRun.error}
+                  </div>
+                )}
+              </div>
+
+              {/* Step output + SQA Review side by side */}
               <div className="flex-1 flex overflow-hidden divide-x divide-slate-800 min-h-0">
 
                 {/* Left: step output */}
@@ -387,42 +427,11 @@ export default function RpaLogPage() {
                   )}
                 </div>
 
-                {/* Right: status code + SQA review */}
+                {/* Right: SQA review */}
                 <div className="w-80 shrink-0 flex flex-col overflow-hidden">
-
-                  {/* Status Code */}
-                  <div className="px-4 py-3 border-b border-slate-800 shrink-0">
-                    <div className="text-xs uppercase tracking-widest text-slate-600 mb-2">Status Code</div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-xs px-2 py-0.5 rounded border font-bold ${STATUS_COLOURS[selectedRun.status] ?? STATUS_COLOURS.FAILED}`}>
-                        {selectedRun.status}
-                      </span>
-                      {selectedRun.order_found_on_list === true && (
-                        <span className="text-xs px-2 py-0.5 rounded border border-emerald-700/60 bg-emerald-950/40 text-emerald-300">
-                          on list ✓
-                        </span>
-                      )}
-                      {selectedRun.order_found_on_list === false && (
-                        <span className="text-xs px-2 py-0.5 rounded border border-amber-700/60 bg-amber-950/40 text-amber-300">
-                          not on list
-                        </span>
-                      )}
-                      {selectedRun.failed_step && (
-                        <span className="w-full text-xs text-red-400 font-mono mt-1">✗ {selectedRun.failed_step}</span>
-                      )}
-                    </div>
-                    {selectedRun.error && (
-                      <div className="mt-2 px-2 py-1.5 rounded border border-red-800 bg-red-950/40 text-xs text-red-300 font-mono break-all">
-                        {selectedRun.error}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* SQA Review */}
                   <div className="flex-1 overflow-y-auto">
                     <SqaPanel sqa={selectedRun.sqa_result} />
                   </div>
-
                 </div>
               </div>
             </>
