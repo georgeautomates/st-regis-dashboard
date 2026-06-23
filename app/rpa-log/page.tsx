@@ -64,10 +64,10 @@ const STEP_CHIP_ACTIVE: Record<string, string> = {
 };
 
 function driveEmbedUrl(url: string): string {
-  // Convert Drive share/view URL to a direct embeddable URL
-  // https://drive.google.com/file/d/FILE_ID/view → https://drive.google.com/uc?export=view&id=FILE_ID
+  // Drive /view links redirect via drive.google.com which browsers block in <img>.
+  // drive.usercontent.google.com serves the file directly without redirect.
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+  if (m) return `https://drive.usercontent.google.com/download?id=${m[1]}&export=view`;
   return url;
 }
 
