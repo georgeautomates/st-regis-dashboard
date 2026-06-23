@@ -84,7 +84,7 @@ function fmtTime(iso: string) {
 function StepOutputPanel({ step }: { step: RpaStep }) {
   const entries = Object.entries(step.output).filter(([, v]) => v !== "" && v !== null && v !== undefined);
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xs uppercase tracking-widest text-slate-500">{step.name}</span>
         <span className={`text-xs px-2 py-0.5 rounded border font-bold ${STEP_CHIP_COLOURS[step.status]}`}>
@@ -172,23 +172,29 @@ function SqaPanel({ sqa }: { sqa: SqaResult | null | undefined }) {
       {sqa.status === "NO_PROTEO_DATA" ? (
         <div className="text-slate-500 text-xs italic">No matching row in Verification sheet — order may not be in Proteo yet.</div>
       ) : (
-        <div className="space-y-1">
-          {sqa.fields.map(f => (
-            <div key={f.field} className="grid grid-cols-[140px_1fr_24px_1fr] items-center gap-2 rounded px-3 py-1.5 border border-slate-800 bg-slate-900/60 text-xs">
-              <div className="text-slate-500 uppercase tracking-widest truncate">{f.field.replace(/_/g, " ")}</div>
-              <div className="font-mono text-slate-200 truncate">{f.rpa_value || <span className="text-slate-600 italic">—</span>}</div>
-              <div className={`text-center font-bold ${FIELD_RESULT_COLOURS[f.result]}`}>
-                {FIELD_RESULT_ICONS[f.result]}
-              </div>
-              <div className="font-mono text-slate-400 truncate">{f.proteo_value || <span className="text-slate-600 italic">—</span>}</div>
-            </div>
-          ))}
-          <div className="mt-1 grid grid-cols-[140px_1fr_24px_1fr] gap-2 px-3 text-xs text-slate-600 uppercase tracking-widest">
-            <div />
+        <div className="space-y-1.5">
+          <div className="grid grid-cols-[180px_1fr_32px_1fr] gap-3 px-3 mb-1 text-xs text-slate-600 uppercase tracking-widest">
+            <div>Field</div>
             <div>RPA filled</div>
             <div />
             <div>Proteo actual</div>
           </div>
+          {sqa.fields.map(f => (
+            <div key={f.field} className={`grid grid-cols-[180px_1fr_32px_1fr] items-center gap-3 rounded px-3 py-2 border text-sm ${
+              f.result === "MISMATCH" ? "border-red-800/60 bg-red-950/30" : "border-slate-800 bg-slate-900/60"
+            }`}>
+              <div className="text-xs text-slate-500 uppercase tracking-widest">{f.field.replace(/_/g, " ")}</div>
+              <div className={`font-mono ${f.result === "MISMATCH" ? "text-red-200" : "text-slate-200"}`}>
+                {f.rpa_value || <span className="text-slate-600 italic text-xs">—</span>}
+              </div>
+              <div className={`text-center font-bold text-base ${FIELD_RESULT_COLOURS[f.result]}`}>
+                {FIELD_RESULT_ICONS[f.result]}
+              </div>
+              <div className={`font-mono ${f.result === "MISMATCH" ? "text-red-300" : "text-slate-400"}`}>
+                {f.proteo_value || <span className="text-slate-600 italic text-xs">—</span>}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -414,25 +420,19 @@ export default function RpaLogPage() {
                 )}
               </div>
 
-              {/* Step output + SQA Review side by side */}
-              <div className="flex-1 flex overflow-hidden divide-x divide-slate-800 min-h-0">
+              {/* Step output */}
+              <div className="px-6 py-4 border-b border-slate-800 shrink-0">
+                <div className="text-xs uppercase tracking-widest text-slate-600 mb-3">Output</div>
+                {selectedStep ? (
+                  <StepOutputPanel step={selectedStep} />
+                ) : (
+                  <div className="text-slate-600 text-sm">Select a step above to see its output</div>
+                )}
+              </div>
 
-                {/* Left: step output */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                  <div className="text-xs uppercase tracking-widest text-slate-600 mb-3">Output</div>
-                  {selectedStep ? (
-                    <StepOutputPanel step={selectedStep} />
-                  ) : (
-                    <div className="text-slate-600 text-sm">Select a step above to see its output</div>
-                  )}
-                </div>
-
-                {/* Right: SQA review */}
-                <div className="w-80 shrink-0 flex flex-col overflow-hidden">
-                  <div className="flex-1 overflow-y-auto">
-                    <SqaPanel sqa={selectedRun.sqa_result} />
-                  </div>
-                </div>
+              {/* SQA Review — full width */}
+              <div className="flex-1 overflow-y-auto">
+                <SqaPanel sqa={selectedRun.sqa_result} />
               </div>
             </>
           )}
