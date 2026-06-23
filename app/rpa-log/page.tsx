@@ -64,10 +64,10 @@ const STEP_CHIP_ACTIVE: Record<string, string> = {
 };
 
 function driveEmbedUrl(url: string): string {
-  // Drive /view links redirect via drive.google.com which browsers block in <img>.
-  // drive.usercontent.google.com serves the file directly without redirect.
+  // Drive blocks cross-origin <img> loads (CORP: same-site). Proxy through our
+  // own API route which fetches server-side and serves without that restriction.
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) return `https://drive.usercontent.google.com/download?id=${m[1]}&export=view`;
+  if (m) return `/api/screenshot-proxy?id=${m[1]}`;
   return url;
 }
 
