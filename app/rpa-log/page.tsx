@@ -63,6 +63,14 @@ const STEP_CHIP_ACTIVE: Record<string, string> = {
   error: "ring-2 ring-red-500",
 };
 
+function driveEmbedUrl(url: string): string {
+  // Convert Drive share/view URL to a direct embeddable URL
+  // https://drive.google.com/file/d/FILE_ID/view → https://drive.google.com/uc?export=view&id=FILE_ID
+  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+  return url;
+}
+
 function fmt(ms: number | null) {
   if (!ms) return "—";
   if (ms < 1000) return `${ms}ms`;
@@ -362,7 +370,7 @@ export default function RpaLogPage() {
                     </a>
                   </div>
                   <img
-                    src={selectedRun.screenshot_url}
+                    src={driveEmbedUrl(selectedRun.screenshot_url)}
                     alt={`Screenshot for job ${selectedRun.job_number}`}
                     className="max-h-64 rounded border border-slate-700 object-contain"
                   />
