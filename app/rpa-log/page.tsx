@@ -372,7 +372,7 @@ export default function RpaLogPage() {
                   <img
                     src={driveEmbedUrl(selectedRun.screenshot_url)}
                     alt={`Screenshot for job ${selectedRun.job_number}`}
-                    className="max-h-64 rounded border border-slate-700 object-contain"
+                    className="w-full rounded border border-slate-700 object-contain max-h-[520px]"
                   />
                 </div>
               )}
