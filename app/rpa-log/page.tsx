@@ -31,8 +31,8 @@ type RpaStep = {
 type SqaField = {
   field: string;
   rpa_value: string;
-  proteo_value: string;
-  result: "MATCH" | "MISMATCH" | "MISSING";
+  truth_value: string | null;
+  result: "MATCH" | "MISMATCH" | "MISSING" | "PRESENT";
 };
 
 type SqaResult = {
@@ -41,6 +41,7 @@ type SqaResult = {
   match: number;
   mismatch: number;
   missing: number;
+  present: number;
   has_proteo: boolean;
   fields: SqaField[];
 };
@@ -135,12 +136,14 @@ const FIELD_RESULT_COLOURS: Record<string, string> = {
   MATCH:   "text-emerald-400",
   MISMATCH:"text-red-400",
   MISSING: "text-slate-500",
+  PRESENT: "text-sky-400",
 };
 
 const FIELD_RESULT_ICONS: Record<string, string> = {
   MATCH:   "✓",
   MISMATCH:"✗",
   MISSING: "—",
+  PRESENT: "~",
 };
 
 function SqaPanel({ sqa }: { sqa: SqaResult | null | undefined }) {
@@ -172,7 +175,7 @@ function SqaPanel({ sqa }: { sqa: SqaResult | null | undefined }) {
           {statusLabel}
         </span>
         <span className="text-xs text-slate-500">
-          {sqa.match}✓&nbsp; {sqa.mismatch}✗&nbsp; {sqa.missing}—
+          {sqa.match}✓&nbsp; {sqa.mismatch}✗&nbsp; {sqa.missing}—&nbsp; {sqa.present ?? 0}~
         </span>
         <span className="ml-auto text-xs text-slate-600">{fmtTime(sqa.run_at)}</span>
       </div>
@@ -185,11 +188,13 @@ function SqaPanel({ sqa }: { sqa: SqaResult | null | undefined }) {
             <div>Field</div>
             <div>RPA filled</div>
             <div />
-            <div>Proteo actual</div>
+            <div>Ground truth</div>
           </div>
           {sqa.fields.map(f => (
             <div key={f.field} className={`grid grid-cols-[180px_1fr_32px_1fr] items-center gap-3 rounded px-3 py-2 border text-sm ${
-              f.result === "MISMATCH" ? "border-red-800/60 bg-red-950/30" : "border-slate-800 bg-slate-900/60"
+              f.result === "MISMATCH" ? "border-red-800/60 bg-red-950/30"
+              : f.result === "MISSING" ? "border-amber-900/40 bg-amber-950/20"
+              : "border-slate-800 bg-slate-900/60"
             }`}>
               <div className="text-xs text-slate-500 uppercase tracking-widest">{f.field.replace(/_/g, " ")}</div>
               <div className={`font-mono ${f.result === "MISMATCH" ? "text-red-200" : "text-slate-200"}`}>
@@ -199,7 +204,10 @@ function SqaPanel({ sqa }: { sqa: SqaResult | null | undefined }) {
                 {FIELD_RESULT_ICONS[f.result]}
               </div>
               <div className={`font-mono ${f.result === "MISMATCH" ? "text-red-300" : "text-slate-400"}`}>
-                {f.proteo_value || <span className="text-slate-600 italic text-xs">—</span>}
+                {f.result === "PRESENT"
+                  ? <span className="text-slate-600 italic text-xs">presence only</span>
+                  : (f.truth_value || <span className="text-slate-600 italic text-xs">—</span>)
+                }
               </div>
             </div>
           ))}
