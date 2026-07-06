@@ -18,6 +18,13 @@ const STATUS_BORDER: Record<JobMatchStatus, string> = {
   UNKNOWN:  "border-l-slate-700",
 };
 
+const CLIENT_COLOURS: Record<string, string> = {
+  "St Regis":     "bg-indigo-900/50 text-indigo-300 border border-indigo-700/50",
+  "AIM":          "bg-teal-900/50 text-teal-300 border border-teal-700/50",
+  "CCT Worldwide": "bg-fuchsia-900/50 text-fuchsia-300 border border-fuchsia-700/50",
+  default:        "bg-slate-800 text-slate-400 border border-slate-700",
+};
+
 function StatBox({ label, value, colour }: { label: string; value: string | number; colour?: string }) {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded px-4 py-3">
@@ -35,6 +42,7 @@ function HomePageInner() {
   const search = searchParams.get("q") ?? "";
   const categoryFilter = (searchParams.get("cat") ?? "ALL") as EmailCategory | "ALL";
   const statusFilter = (searchParams.get("status") ?? "ALL") as JobMatchStatus | "ALL";
+  const clientFilter = searchParams.get("client") ?? "ALL";
 
   function setParam(key: string, value: string, defaultVal: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -47,6 +55,7 @@ function HomePageInner() {
   const setSearch = (v: string) => setParam("q", v, "");
   const setCategoryFilter = (v: EmailCategory | "ALL") => setParam("cat", v, "ALL");
   const setStatusFilter = (v: JobMatchStatus | "ALL") => setParam("status", v, "ALL");
+  const setClientFilter = (v: string) => setParam("client", v, "ALL");
 
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,17 +68,23 @@ function HomePageInner() {
       .catch(e => { setError(String(e)); setLoading(false); });
   }, []);
 
+  const clientOptions = useMemo(
+    () => Array.from(new Set(emails.map(e => e.client_group))).sort(),
+    [emails]
+  );
+
   const filtered = useMemo(() => {
     return emails.filter(e => {
       if (categoryFilter !== "ALL" && e.category !== categoryFilter) return false;
       if (statusFilter !== "ALL" && e.worst_status !== statusFilter) return false;
+      if (clientFilter !== "ALL" && e.client_group !== clientFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         if (!e.subject.toLowerCase().includes(q) && !e.message_id.toLowerCase().includes(q)) return false;
       }
       return true;
     });
-  }, [emails, categoryFilter, statusFilter, search]);
+  }, [emails, categoryFilter, statusFilter, clientFilter, search]);
 
   const stats = useMemo(() => ({
     total: emails.length,
@@ -112,6 +127,16 @@ function HomePageInner() {
           onChange={e => setSearch(e.target.value)}
           className="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 w-72"
         />
+        <select
+          value={clientFilter}
+          onChange={e => setClientFilter(e.target.value)}
+          className="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-slate-500"
+        >
+          <option value="ALL">All Clients</option>
+          {clientOptions.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
         <div className="flex gap-1.5">
           {(["ALL", "New Order", "Amendment", "Cancellation"] as const).map(c => (
             <button key={c} onClick={() => setCategoryFilter(c)}
@@ -142,7 +167,8 @@ function HomePageInner() {
       <div className="px-6 py-2 border-b border-slate-800 grid grid-cols-12 gap-3 text-xs uppercase tracking-widest text-slate-600 shrink-0">
         <div className="col-span-1">Email ID</div>
         <div className="col-span-2">Subject</div>
-        <div className="col-span-2">Received</div>
+        <div className="col-span-1">Received</div>
+        <div className="col-span-1">Client</div>
         <div className="col-span-2">Category</div>
         <div className="col-span-1">Jobs</div>
         <div className="col-span-2">Match Summary</div>
@@ -174,7 +200,7 @@ function HomePageInner() {
               {email.subject || <span className="text-slate-600 italic">No subject</span>}
             </div>
 
-            <div className="col-span-2 text-xs text-slate-400">
+            <div className="col-span-1 text-xs text-slate-400">
               {receivedDate ? (
                 <>
                   <div>{receivedDate.toLocaleDateString("en-GB")}</div>
@@ -183,6 +209,12 @@ function HomePageInner() {
               ) : (
                 <span className="text-slate-700">—</span>
               )}
+            </div>
+
+            <div className="col-span-1">
+              <span className={`text-xs px-2 py-0.5 rounded font-medium ${CLIENT_COLOURS[email.client_group] ?? CLIENT_COLOURS.default}`}>
+                {email.client_group}
+              </span>
             </div>
 
             <div className="col-span-2">

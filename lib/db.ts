@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { hasLocationFlag } from "@/lib/utils";
+import { hasLocationFlag, clientGroup } from "@/lib/utils";
 
 // ── Connection ────────────────────────────────────────────────────────────────
 
@@ -123,6 +123,7 @@ export type Email = {
   worst_status: JobMatchStatus;
   top_mismatch_reasons: string[];
   has_location_flag: boolean;
+  client_group: string;
 };
 
 export type ManualReview = {
@@ -257,6 +258,7 @@ function buildEmail(msgId: string, jobs: Job[]): Email {
     worst_status: worst,
     top_mismatch_reasons: topReasons,
     has_location_flag: jobs.some(hasLocationFlag),
+    client_group: clientGroup(first.client_name),
   };
 }
 
