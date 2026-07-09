@@ -27,5 +27,6 @@ export function clientGroup(clientName: string): string {
   if (n.includes("st regis")) return "St Regis";
   if (n.includes("aim") || n.includes("sig trading")) return "AIM";
   if (n.includes("cct worldwide")) return "CCT Worldwide";
+  if (n.includes("salento")) return "Salento";
   return clientName || "Unknown";
 }
