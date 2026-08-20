@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import type { Email, Job, ManualReview } from "@/lib/db";
 import { hasLocationFlag } from "@/lib/utils";
+import { ensureReviewerEmail, getReviewerEmail } from "@/lib/reviewer";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -79,15 +80,17 @@ function ManualReviewPanel({ job, existing, onSaved }: {
   );
   const [reason, setReason] = useState(existing?.reason ?? "");
   const [notes, setNotes] = useState(existing?.notes ?? "");
-  const [reviewer, setReviewer] = useState(existing?.reviewed_by ?? "");
+  const [reviewer, setReviewer] = useState(existing?.reviewed_by || getReviewerEmail());
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(!!existing);
 
-  const canSave = !!verdict && !!reviewer && (verdict === "PASS" || !!reason);
+  const canSave = !!verdict && (verdict === "PASS" || !!reason);
 
   async function handleSave() {
     setSaving(true);
-    const review = { job_number: job.job_number, verdict, reason, notes, reviewed_by: reviewer };
+    const reviewedBy = reviewer || ensureReviewerEmail();
+    if (reviewedBy && reviewedBy !== reviewer) setReviewer(reviewedBy);
+    const review = { job_number: job.job_number, verdict, reason, notes, reviewed_by: reviewedBy };
     await fetch("/api/review", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -139,7 +142,7 @@ function ManualReviewPanel({ job, existing, onSaved }: {
       />
 
       <input
-        placeholder="Reviewer name"
+        placeholder="Your email"
         value={reviewer}
         onChange={e => setReviewer(e.target.value)}
         className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none mb-3"

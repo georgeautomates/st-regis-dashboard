@@ -135,6 +135,38 @@ export type ManualReview = {
   reviewed_at: string;
 };
 
+// ── Manifest review (Add / Update / Cancel / Ignore triage) ──────────────────
+
+export type ManifestAction = "Add" | "Update" | "Cancel" | "Ignore";
+
+export type ManifestReviewJob = Job & {
+  suggested_action: ManifestAction | "";
+  suggested_reason: string;
+  review_action: ManifestAction | "";
+  review_action_source: "suggested" | "override" | "";
+};
+
+export type ManifestReviewEmail = {
+  message_id: string;
+  subject: string;
+  email_received_at: string;
+  processed_at: string;
+  client_group: string;
+  jobs: ManifestReviewJob[];
+  pending_count: number; // jobs with no review_action set yet
+};
+
+function rowToManifestReviewJob(r: Record<string, unknown>): ManifestReviewJob {
+  const job = rowToJob(r as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    ...job,
+    suggested_action: (r.suggested_action as ManifestAction) || "",
+    suggested_reason: String(r.suggested_reason ?? ""),
+    review_action: (r.review_action as ManifestAction) || "",
+    review_action_source: (r.review_action_source as "suggested" | "override") || "",
+  };
+}
+
 // ── Normalise DB row → Job ────────────────────────────────────────────────────
 
 function dbMatchStatus(v: string | null): JobMatchStatus {
@@ -296,7 +328,7 @@ export async function getReviewsForEmail(messageId: string): Promise<Record<stri
   const pool = getPool();
   const { rows } = await pool.query(
     `SELECT job_number, manual_verdict as verdict, manual_reason as reason, '' as notes,
-            '' as reviewed_by, '' as reviewed_at
+            manual_reviewed_by as reviewed_by, manual_reviewed_at as reviewed_at
      FROM st_regis_orders
      WHERE message_id = $1 AND manual_verdict IS NOT NULL AND manual_verdict != ''`,
     [messageId]
@@ -308,8 +340,8 @@ export async function getReviewsForEmail(messageId: string): Promise<Record<stri
       verdict:      r.verdict === "PASS" ? "PASS" : r.verdict === "FAIL" ? "FAIL" : "PENDING",
       reason:       r.reason ?? "",
       notes:        "",
-      reviewed_by:  "",
-      reviewed_at:  "",
+      reviewed_by:  String(r.reviewed_by ?? ""),
+      reviewed_at:  r.reviewed_at ? String(r.reviewed_at) : "",
     };
   }
   return result;
@@ -330,7 +362,8 @@ export async function getAllReviews(): Promise<(ManualReview & {
   const { rows } = await pool.query(`
     SELECT job_number, client_name, message_id, email_subject,
            collection_point, delivery_point, price, category, processed_at,
-           manual_verdict as verdict, manual_reason as reason
+           manual_verdict as verdict, manual_reason as reason,
+           manual_reviewed_by as reviewed_by, manual_reviewed_at as reviewed_at
     FROM st_regis_orders
     WHERE manual_verdict IN ('PASS', 'FAIL')
     ORDER BY processed_at DESC NULLS LAST
@@ -348,8 +381,8 @@ export async function getAllReviews(): Promise<(ManualReview & {
     verdict:          r.verdict === "PASS" ? "PASS" : "FAIL",
     reason:           String(r.reason ?? ""),
     notes:            "",
-    reviewed_by:      "",
-    reviewed_at:      "",
+    reviewed_by:      String(r.reviewed_by ?? ""),
+    reviewed_at:      r.reviewed_at ? String(r.reviewed_at) : "",
   }));
 }
 
@@ -357,8 +390,90 @@ export async function saveReview(review: Omit<ManualReview, "reviewed_at">): Pro
   const pool = getPool();
   await pool.query(
     `UPDATE st_regis_orders
-     SET manual_verdict = $1, manual_reason = $2
-     WHERE job_number = $3`,
-    [review.verdict, review.reason || review.notes, review.job_number]
+     SET manual_verdict = $1, manual_reason = $2, manual_reviewed_by = $3, manual_reviewed_at = now()
+     WHERE job_number = $4`,
+    [review.verdict, review.reason || review.notes, review.reviewed_by, review.job_number]
+  );
+}
+
+// ── Manifest review (DS Smith Add/Update/Cancel/Ignore triage) ───────────────
+//
+// suggested_action/suggested_reason are computed by
+// firmin.clients.manifest_review.classify_manifest_order() (Python, run via
+// scripts/classify_manifest_review.py) — this file only reads and displays
+// them, plus writes the reviewer's own review_action decision. See
+// Plans/ds-smith-manifest-dashboard-prd.md.
+
+function buildManifestReviewEmail(msgId: string, jobs: ManifestReviewJob[]): ManifestReviewEmail {
+  const first = jobs[0];
+  return {
+    message_id: msgId,
+    subject: first.email_subject,
+    email_received_at: first.email_received_at,
+    processed_at: first.processed_at,
+    client_group: clientGroup(first.client_name),
+    jobs,
+    pending_count: jobs.filter(j => !j.review_action).length,
+  };
+}
+
+/**
+ * Manifests (grouped by email) that have at least one job still awaiting a
+ * reviewer decision (review_action is unset). Most-recently-processed first.
+ */
+export async function getPendingManifestReviews(): Promise<ManifestReviewEmail[]> {
+  const pool = getPool();
+  const { rows } = await pool.query(`
+    SELECT * FROM st_regis_orders
+    WHERE message_id IN (
+      SELECT message_id FROM st_regis_orders
+      WHERE (client_name ILIKE '%st regis%' OR client_name ILIKE '%ds smith%')
+        AND (review_action IS NULL OR review_action = '')
+    )
+    ORDER BY processed_at DESC NULLS LAST
+  `);
+
+  const emailMap: Record<string, ManifestReviewJob[]> = {};
+  for (const row of rows) {
+    const job = rowToManifestReviewJob(row);
+    if (!emailMap[job.message_id]) emailMap[job.message_id] = [];
+    emailMap[job.message_id].push(job);
+  }
+  return Object.entries(emailMap)
+    .map(([msgId, jobs]) => buildManifestReviewEmail(msgId, jobs))
+    .sort((a, b) => (b.processed_at || "").localeCompare(a.processed_at || ""));
+}
+
+export async function getManifestReviewByMessageId(messageId: string): Promise<ManifestReviewEmail | null> {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    `SELECT * FROM st_regis_orders WHERE message_id = $1 ORDER BY job_number`,
+    [messageId]
+  );
+  if (rows.length === 0) return null;
+  const jobs = rows.map(rowToManifestReviewJob);
+  return buildManifestReviewEmail(messageId, jobs);
+}
+
+export type ManifestActionDecision = {
+  job_number: string;
+  action: ManifestAction;
+  source: "suggested" | "override";
+  reviewed_by: string;
+};
+
+/**
+ * Save the reviewer's Add/Update/Cancel/Ignore decision for one job.
+ * Writes review_action only — never touches suggested_action/suggested_reason
+ * (those belong to the classifier) or manual_verdict/manual_reason (the
+ * separate PASS/FAIL accuracy audit on /manager).
+ */
+export async function saveManifestAction(decision: ManifestActionDecision): Promise<void> {
+  const pool = getPool();
+  await pool.query(
+    `UPDATE st_regis_orders
+     SET review_action = $1, review_action_source = $2, review_action_by = $3, review_action_at = now()
+     WHERE job_number = $4`,
+    [decision.action, decision.source, decision.reviewed_by, decision.job_number]
   );
 }
