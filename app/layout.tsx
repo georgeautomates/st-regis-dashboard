@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <a href="/" className="font-bold text-slate-100 tracking-wide hover:text-slate-300">St Regis Dashboard</a>
           <span className="text-slate-700">|</span>
           <a href="/manager" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Manager Review</a>
+          <Link href="/manifest-review" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Manifest Review</Link>
           <a href="/log" className="text-xs text-sky-400 hover:text-sky-300 transition-colors">System Log</a>
           <a href="/rpa-log" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">RPA Log</a>
         </header>
